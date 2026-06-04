@@ -1,78 +1,3 @@
-<?php
-session_start();
-
-// Cek apakah pengguna sudah login
-$logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
-$username = $logged_in ? $_SESSION['username'] : '';
-
-// Inisialisasi keranjang jika belum ada
-if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = [];
-    $_SESSION['current_restaurant'] = '';
-}
-
-// Menangani aksi tambah ke keranjang via AJAX
-if ($logged_in && isset($_POST['action']) && $_POST['action'] === 'add_to_cart') {
-    $item_id = $_POST['item_id'];
-    $item_name = $_POST['item_name'];
-    $item_price = $_POST['item_price'];
-    $item_quantity = $_POST['item_quantity'];
-    $item_image = $_POST['item_image'];
-    $restaurant = "Kedai Mama Zavan"; // Nama restoran diubah
-    
-    // Cek jika keranjang kosong atau dari restoran yang sama
-    if (empty($_SESSION['cart'])) {
-        $_SESSION['current_restaurant'] = $restaurant;
-    } 
-    elseif ($_SESSION['current_restaurant'] !== $restaurant) {
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => false,
-            'message' => "Anda sudah punya pesanan dari ".$_SESSION['current_restaurant'].". Selesaikan atau kosongkan keranjang dulu."
-        ]);
-        exit;
-    }
-    
-    // Prefix ID item diubah agar unik
-    $cart_item_id = 'zavan_' . $item_id;
-    
-    if (isset($_SESSION['cart'][$cart_item_id])) {
-        $_SESSION['cart'][$cart_item_id]['quantity'] += $item_quantity;
-    } else {
-        $_SESSION['cart'][$cart_item_id] = [
-            'name' => $item_name,
-            'price' => $item_price,
-            'quantity' => $item_quantity,
-            'image' => $item_image,
-            'restaurant' => $restaurant
-        ];
-    }
-    
-    // Hitung total item
-    $total_items = 0;
-    foreach ($_SESSION['cart'] as $item) {
-        $total_items += $item['quantity'];
-    }
-    
-    // Kirim respons JSON
-    header('Content-Type: application/json');
-    echo json_encode([
-        'success' => true,
-        'message' => "{$item_quantity}x {$item_name} telah ditambahkan!",
-        'total_items' => $total_items
-    ]);
-    exit;
-}
-
-// Hitung total item untuk ditampilkan di navbar
-$total_items = 0;
-if ($logged_in && isset($_SESSION['cart'])) {
-    foreach ($_SESSION['cart'] as $item) {
-        $total_items += $item['quantity'];
-    }
-}
-?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -82,36 +7,26 @@ if ($logged_in && isset($_SESSION['cart'])) {
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* (Style untuk Toast dan Modal sama seperti sebelumnya) */
         .toast {
-            position: fixed; top: 20px; right: 20px; background-color: #4CAF50; color: white; padding: 15px 25px;
-            border-radius: 30px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); z-index: 9999; display: none;
-            animation: slideIn 0.5s, fadeOut 0.5s 2.5s;
+            position: fixed; bottom: 20px; right: 20px; background-color: #28a745; color: white;
+            padding: 15px 25px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 9999; display: none; opacity: 0; transition: opacity 0.5s, bottom 0.5s;
         }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .toast.show { display: block; opacity: 1; bottom: 40px; }
+        .toast.error { background-color: #dc3545; }
+        .toast i { margin-right: 10px; }
     </style>
 </head>
 <body>
+    <div id="toast-container"></div>
+
     <nav class="navbar">
         <div class="navbar-logo">Pujasera UDS</div>
-        <div class="navbar-menu">
-            <?php if($logged_in): ?>
-                <span class="user-greeting">Halo, <?php echo htmlspecialchars($username); ?></span>
-                <a href="logout.php">Logout</a>
-            <?php else: ?>
-                <a href="login.php">Login</a>
-                <a href="register.php">Register</a>
-            <?php endif; ?>
-            <a href="cart.php" class="cart-icon">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="cart-count"><?php echo $total_items; ?></span>
-            </a>
-        </div>
+        <div class="navbar-menu" id="navbar-menu"></div>
     </nav>
     
     <div class="container">
-        <a href="index.php" class="back-btn">
+        <a href="index.html" class="back-btn">
             <i class="fas fa-arrow-left"></i> Kembali
         </a>
         
@@ -255,16 +170,15 @@ if ($logged_in && isset($_SESSION['cart'])) {
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
     
     <div class="modal" id="loginModal" style="display: none;">
         <div class="modal-content">
-             <h3>Login Diperlukan</h3>
+            <h3>Login Diperlukan</h3>
             <p>Anda perlu login terlebih dahulu untuk menambahkan item ke keranjang.</p>
             <div class="modal-buttons">
-                <a href="login.php" class="btn">Login</a>
+                <a href="login.html" class="btn">Login</a>
                 <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
             </div>
         </div>
@@ -274,93 +188,98 @@ if ($logged_in && isset($_SESSION['cart'])) {
         <p>&copy; 2025 Pujasera UDS by Derik. Hak Cipta Dilindungi.</p>
     </footer>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script>
-    // Status login dari PHP
-    const isLoggedIn = <?php echo $logged_in ? 'true' : 'false'; ?>;
-    const modal = document.getElementById('loginModal');
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const categories = document.querySelectorAll('.menu-category');
-        const menuItems = document.querySelectorAll('.menu-item');
-        const cartCount = document.querySelector('.cart-count');
-        
-        // Filter menu
-        categories.forEach(category => {
-            category.addEventListener('click', function() {
-                categories.forEach(cat => cat.classList.remove('active'));
-                this.classList.add('active');
-                const selectedCategory = this.getAttribute('data-category');
-                menuItems.forEach(item => {
-                    item.style.display = 'none';
-                    if (selectedCategory === 'all' || item.getAttribute('data-category') === selectedCategory) {
-                        item.style.display = 'block';
-                    }
+    <script>
+        const RESTAURANT_NAME = "Kedai Mama Zavan";
+        const RESTAURANT_PREFIX = "zavan_";
+
+        function escapeHtml(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
+        function getCart(){return JSON.parse(localStorage.getItem('cart')||'[]');}
+        function saveCart(c){localStorage.setItem('cart',JSON.stringify(c));}
+        function getCartCount(){return getCart().reduce((s,i)=>s+parseInt(i.quantity),0);}
+
+        function showToast(message, isError=false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.innerHTML = `<i class="fas ${isError?'fa-exclamation-circle':'fa-check-circle'}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(()=>toast.classList.add('show'),100);
+            setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>container.removeChild(toast),500);},3000);
+        }
+
+        function renderNavbar() {
+            const loggedIn = localStorage.getItem('loggedin')==='true';
+            const username = localStorage.getItem('username')||'';
+            const cartCount = getCartCount();
+            const nav = document.getElementById('navbar-menu');
+            if(loggedIn){
+                nav.innerHTML=`<span class="user-greeting">Halo, ${escapeHtml(username)}</span><a href="#" id="logout-btn">Logout</a><a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">${cartCount}</span></a>`;
+                document.getElementById('logout-btn').addEventListener('click',function(e){e.preventDefault();localStorage.removeItem('loggedin');localStorage.removeItem('username');window.location.href='index.html';});
+            } else {
+                nav.innerHTML=`<a href="login.html">Login</a><a href="register.html">Register</a><a href="login.html" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">${cartCount}</span></a>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const isLoggedIn = localStorage.getItem('loggedin')==='true';
+            const modal = document.getElementById('loginModal');
+            renderNavbar();
+
+            document.querySelectorAll('.menu-category').forEach(category=>{
+                category.addEventListener('click',function(){
+                    document.querySelectorAll('.menu-category').forEach(c=>c.classList.remove('active'));
+                    this.classList.add('active');
+                    const sel=this.getAttribute('data-category');
+                    document.querySelectorAll('.menu-item').forEach(item=>{
+                        item.style.display=(sel==='all'||item.getAttribute('data-category')===sel)?'block':'none';
+                    });
                 });
             });
-        });
-        
-        // Kuantitas dan Tambah ke Keranjang
-        document.querySelectorAll('.add-to-cart-form').forEach(form => {
-            const decreaseBtn = form.querySelector('.decrease');
-            const increaseBtn = form.querySelector('.increase');
-            const quantitySpan = form.querySelector('.quantity span');
-            const quantityInput = form.querySelector('.quantity-input');
-            
-            decreaseBtn.addEventListener('click', function() {
-                let qty = parseInt(quantityInput.value);
-                if (qty > 1) {
-                    qty--;
-                    quantitySpan.textContent = qty;
-                    quantityInput.value = qty;
-                }
-            });
-            
-            increaseBtn.addEventListener('click', function() {
-                let qty = parseInt(quantityInput.value);
-                qty++;
-                quantitySpan.textContent = qty;
-                quantityInput.value = qty;
-            });
-            
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                if (!isLoggedIn) {
-                    modal.style.display = 'flex';
-                    return;
-                }
-                const formData = new FormData(form);
-                formData.append('action', 'add_to_cart');
-                
-                $.ajax({
-                    url: 'kedai-mama-zavan.php', // URL AJAX diubah ke file ini
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            cartCount.textContent = response.total_items;
-                            // Anda bisa menambahkan notifikasi toast di sini
-                            alert(response.message); // Pesan sederhana
-                            quantitySpan.textContent = 1;
-                            quantityInput.value = 1;
-                        } else {
-                            alert(response.message);
-                        }
-                    },
-                    error: function() {
-                        alert('Terjadi kesalahan. Silakan coba lagi.');
+
+            document.querySelectorAll('.add-to-cart-form').forEach(form=>{
+                const decreaseBtn=form.querySelector('.decrease');
+                const increaseBtn=form.querySelector('.increase');
+                const quantitySpan=form.querySelector('.quantity span');
+                const quantityInput=form.querySelector('.quantity-input');
+
+                decreaseBtn.addEventListener('click',function(){let q=parseInt(quantityInput.value);if(q>1){q--;quantitySpan.textContent=q;quantityInput.value=q;}});
+                increaseBtn.addEventListener('click',function(){let q=parseInt(quantityInput.value);q++;quantitySpan.textContent=q;quantityInput.value=q;});
+
+                form.addEventListener('submit',function(e){
+                    e.preventDefault();
+                    if(!isLoggedIn){modal.style.display='flex';return;}
+
+                    const itemId=form.querySelector('[name="item_id"]').value;
+                    const itemName=form.querySelector('[name="item_name"]').value;
+                    const itemPrice=parseInt(form.querySelector('[name="item_price"]').value);
+                    const itemImage=form.querySelector('[name="item_image"]').value;
+                    const itemQuantity=parseInt(quantityInput.value);
+
+                    let cart=getCart();
+                    const currentRestaurant=localStorage.getItem('current_restaurant')||'';
+
+                    if(cart.length>0&&currentRestaurant&&currentRestaurant!==RESTAURANT_NAME){
+                        showToast(`Anda sudah punya pesanan dari ${currentRestaurant}. Selesaikan atau kosongkan keranjang dulu.`,true);
+                        return;
                     }
+
+                    localStorage.setItem('current_restaurant',RESTAURANT_NAME);
+                    const cartItemId=RESTAURANT_PREFIX+itemId;
+                    const idx=cart.findIndex(i=>i.id===cartItemId);
+
+                    if(idx!==-1){cart[idx].quantity+=itemQuantity;}
+                    else{cart.push({id:cartItemId,name:itemName,price:itemPrice,quantity:itemQuantity,image:itemImage,restaurant:RESTAURANT_NAME});}
+
+                    saveCart(cart);
+                    showToast(`${itemQuantity}x ${itemName} telah ditambahkan!`);
+                    quantitySpan.textContent=1;quantityInput.value=1;
+                    document.querySelector('.cart-count').textContent=getCartCount();
                 });
             });
+
+            window.closeModal=function(){modal.style.display='none';}
+            window.onclick=function(event){if(event.target==modal)closeModal();}
         });
-        
-        // Fungsi Modal
-        window.closeModal = function() { modal.style.display = 'none'; }
-        window.onclick = function(event) { if (event.target == modal) { closeModal(); } }
-    });
-</script>
+    </script>
 </body>
 </html>

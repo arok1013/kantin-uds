@@ -1,75 +1,3 @@
-<?php
-session_start();
-
-// Set timezone to WIB
-date_default_timezone_set('Asia/Jakarta');
-
-// Check if there's a current order
-if (!isset($_SESSION['current_order'])) {
-    header("Location: index.php");
-    exit;
-}
-
-// Get order data from session
-$order = $_SESSION['current_order'];
-$order_id = $order['id'];
-
-// Format tanggal lengkap dengan bulan dan tahun
-$current_datetime = date('d-m-Y H:i:s') . ' WIB';
-$current_date = date('d-m-Y');
-$current_time = date('H:i:s');
-
-// Update order date to include full date and current time
-if (isset($order['date'])) {
-    // Ensure we have a complete date with month and year
-    if (strpos($order['date'], '-') !== false) {
-        // If date already has proper format, keep it but update the time
-        $date_parts = explode(' ', $order['date']);
-        $order_date = $date_parts[0] . ' ' . $current_time . ' WIB';
-    } else {
-        // If date doesn't have proper format, use today's complete date
-        $order_date = $current_date . ' ' . $current_time . ' WIB';
-    }
-} else {
-    // If no date exists, use current complete date and time
-    $order_date = $current_datetime;
-}
-
-$table_number = $order['table'];
-$restaurant = $order['restaurant'];
-$order_items = $order['items'];
-$total = $order['total'];
-$customer_name = $order['customer_name'];
-
-// Clear the current order from session
-unset($_SESSION['current_order']);
-
-// Prepare WhatsApp message
-$whatsapp_message = "Halo, saya $customer_name telah melakukan pembayaran dengan detail berikut:\n\n";
-$whatsapp_message .= "📋 *Nomor Pesanan*: $order_id\n";
-$whatsapp_message .= "🪑 *Nomor Meja*: $table_number\n";
-$whatsapp_message .= "📅 *Tanggal & Waktu Pesanan*: $order_date\n";
-$whatsapp_message .= "🏪 *Warung*: $restaurant\n\n";
-$whatsapp_message .= "🍽️ *Detail Pesanan*:\n";
-foreach ($order_items as $item) {
-    $whatsapp_message .= "- {$item['quantity']}x {$item['name']} (@Rp " . number_format($item['price'], 0, ',', '.') . ")\n";
-}
-$whatsapp_message .= "\n💵 *Total Pembayaran*: Rp " . number_format($total, 0, ',', '.') . "\n\n";
-$whatsapp_message .= "Berikut bukti pembayarannya:";
-
-// Determine WhatsApp number based on restaurant
-$whatsapp_number = '';
-if ($restaurant === 'Warung Jawa') {
-    $whatsapp_number = '6281226696721'; // Warung Jawa
-} elseif ($restaurant === 'Kedai Mama Zavan') {
-    $whatsapp_number = '6285117315388'; // Kedai Mama Zavan
-}
-elseif ($restaurant === 'Warung Bu Endang') {
-    $whatsapp_number = '6282264431605'; // Warung Bu Endang
-}
-$encoded_message = urlencode($whatsapp_message);
-?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -79,7 +7,6 @@ $encoded_message = urlencode($whatsapp_message);
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Base styles */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -445,8 +372,6 @@ $encoded_message = urlencode($whatsapp_message);
                 padding: 30px;
             }
         }
-        
-        
     </style>
 </head>
 <body>
@@ -454,8 +379,8 @@ $encoded_message = urlencode($whatsapp_message);
     <nav class="navbar">
         <div class="navbar-logo">UDS FoodCourt</div>
         <div class="navbar-menu">
-            <a href="logout.php">Logout</a>
-            <a href="cart.php" class="cart-icon">
+            <a href="#" id="logout-btn">Logout</a>
+            <a href="cart.html" class="cart-icon">
                 <i class="fas fa-shopping-cart"></i>
                 <span class="cart-count">0</span>
             </a>
@@ -474,33 +399,30 @@ $encoded_message = urlencode($whatsapp_message);
             <div class="order-details">
                 <div class="order-detail">
                     <div class="order-detail-label">Nomor Pesanan</div>
-                    <div>: <?php echo htmlspecialchars($order_id); ?></div>
+                    <div id="receipt-order-id">: -</div>
                 </div>
                 <div class="order-detail">
                     <div class="order-detail-label">Nomor Meja</div>
-                    <div>: <?php echo htmlspecialchars($table_number); ?></div>
+                    <div id="receipt-table-number">: -</div>
                 </div>
                 <div class="order-detail">
                     <div class="order-detail-label">Tanggal & Waktu</div>
-                    <div>: <?php echo $order_date; ?></div>
+                    <div id="receipt-date">: -</div>
                 </div>
                 <div class="order-detail">
                     <div class="order-detail-label">Warung</div>
-                    <div>: <?php echo htmlspecialchars($restaurant); ?></div>
+                    <div id="receipt-restaurant">: -</div>
                 </div>
                 
                 <div class="order-items">
                     <h4>Detail Pesanan:</h4>
-                    <?php foreach ($order_items as $item): ?>
-                        <div class="order-item">
-                            <span><?php echo $item['quantity']; ?>x <?php echo htmlspecialchars($item['name']); ?></span>
-                            <span>Rp <?php echo number_format($item['price'] * $item['quantity'], 0, ',', '.'); ?></span>
-                        </div>
-                    <?php endforeach; ?>
+                    <div id="receipt-items-list">
+                        <!-- Dynamic items -->
+                    </div>
                     
                     <div class="order-total">
                         <span>Total Pembayaran</span>
-                        <span>Rp <?php echo number_format($total, 0, ',', '.'); ?></span>
+                        <span id="receipt-total-price">Rp 0</span>
                     </div>
                 </div>
             </div>
@@ -513,19 +435,13 @@ $encoded_message = urlencode($whatsapp_message);
             <div class="whatsapp-section">
                 <h3><i class="fab fa-whatsapp"></i> Konfirmasi ke Warung</h3>
                 
-                <div class="message-preview">
-                    <?php echo nl2br(htmlspecialchars($whatsapp_message)); ?>
+                <div class="message-preview" id="whatsapp-message-preview">
+                    <!-- Dynamic preview -->
                 </div>
                 
-                <?php if ($whatsapp_number): ?>
-                    <a href="https://wa.me/<?php echo $whatsapp_number; ?>?text=<?php echo $encoded_message; ?>" 
-                       class="whatsapp-btn" target="_blank">
-                        <i class="fab fa-whatsapp"></i> Kirim ke <?php echo htmlspecialchars($restaurant); ?>
-                    </a>
-                    <p>Nomor WhatsApp: <?php echo substr($whatsapp_number, 0, 4) . '-' . substr($whatsapp_number, 4, 4) . '-' . substr($whatsapp_number, 8); ?></p>
-                <?php else: ?>
-                    <p>Silakan hubungi admin untuk konfirmasi pembayaran.</p>
-                <?php endif; ?>
+                <div id="whatsapp-action-area">
+                    <!-- Dynamic WhatsApp Link -->
+                </div>
                 
                 <button onclick="copyToClipboard()" class="copy-btn">
                     <i class="fas fa-copy"></i> Salin Pesan
@@ -533,10 +449,10 @@ $encoded_message = urlencode($whatsapp_message);
             </div>
             
             <div class="action-buttons">
-                <a href="index.php" class="home-btn">
+                <a href="index.html" class="home-btn">
                     <i class="fas fa-home"></i> Kembali ke Beranda
                 </a>
-                <a href="index.php" class="continue-btn">
+                <a href="index.html" class="continue-btn">
                     <i class="fas fa-utensils"></i> Pesan Lagi
                 </a>
             </div>
@@ -549,14 +465,117 @@ $encoded_message = urlencode($whatsapp_message);
     </footer>
 
     <script>
+        let whatsappMsgText = ""; // Global variable to store message for copy function
+
+        function escapeHtml(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
+        function formatRupiah(n){return 'Rp '+n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,".");}
+
         function copyToClipboard() {
-            const message = `<?php echo str_replace(["\r", "\n"], ['', '\\n'], addslashes($whatsapp_message)); ?>`;
-            navigator.clipboard.writeText(message).then(() => {
+            if(!whatsappMsgText) return;
+            navigator.clipboard.writeText(whatsappMsgText).then(() => {
                 alert('Pesan telah disalin ke clipboard!');
             }).catch(err => {
                 console.error('Gagal menyalin pesan: ', err);
             });
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check login status
+            const loggedIn = localStorage.getItem('loggedin')==='true';
+            if(!loggedIn) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Bind logout button click
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('loggedin');
+                localStorage.removeItem('username');
+                window.location.href = 'index.html';
+            });
+
+            // Get current order
+            const orderDataStr = localStorage.getItem('current_order');
+            if(!orderDataStr) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Clear current order from localStorage so reloading redirects to home (like PHP session unset)
+            localStorage.removeItem('current_order');
+
+            const order = JSON.parse(orderDataStr);
+
+            // Determine WIB date/time at rendering (similar to PHP script)
+            const now = new Date();
+            const current_date = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth()+1).padStart(2, '0')}-${now.getFullYear()}`;
+            const current_time = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            const order_date = `${current_date} ${current_time} WIB`;
+
+            // Set receipt texts
+            document.getElementById('receipt-order-id').textContent = ': ' + order.id;
+            document.getElementById('receipt-table-number').textContent = ': ' + order.table;
+            document.getElementById('receipt-date').textContent = ': ' + order_date;
+            document.getElementById('receipt-restaurant').textContent = ': ' + order.restaurant;
+            document.getElementById('receipt-total-price').textContent = formatRupiah(order.total);
+
+            // Set receipt items
+            const itemsList = document.getElementById('receipt-items-list');
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="order-item">
+                        <span>${item.quantity}x ${escapeHtml(item.name)}</span>
+                        <span>${formatRupiah(item.price * item.quantity)}</span>
+                    </div>
+                `;
+            });
+            itemsList.innerHTML = itemsHtml;
+
+            // Generate WhatsApp message
+            let msg = `Halo, saya ${order.customer_name} telah melakukan pembayaran dengan detail berikut:\n\n`;
+            msg += `📋 *Nomor Pesanan*: ${order.id}\n`;
+            msg += `🪑 *Nomor Meja*: ${order.table}\n`;
+            msg += `📅 *Tanggal & Waktu Pesanan*: ${order_date}\n`;
+            msg += `🏪 *Warung*: ${order.restaurant}\n\n`;
+            msg += `🍽️ *Detail Pesanan*:\n`;
+            order.items.forEach(item => {
+                msg += `- ${item.quantity}x ${item.name} (@Rp ${item.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")})\n`;
+            });
+            msg += `\n💵 *Total Pembayaran*: Rp ${order.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}\n\n`;
+            msg += `Berikut bukti pembayarannya:`;
+            
+            whatsappMsgText = msg;
+
+            // Show preview
+            document.getElementById('whatsapp-message-preview').textContent = msg;
+
+            // Determine WhatsApp number
+            let whatsappNumber = '';
+            if (order.restaurant === 'Warung Jawa') {
+                whatsappNumber = '6281226696721';
+            } else if (order.restaurant === 'Kedai Mama Zavan') {
+                whatsappNumber = '6285117315388';
+            } else if (order.restaurant === 'Warung Bu Endang') {
+                whatsappNumber = '6282264431605';
+            }
+
+            const actionArea = document.getElementById('whatsapp-action-area');
+            if (whatsappNumber) {
+                const encodedMsg = encodeURIComponent(msg);
+                const formattedNum = whatsappNumber.substring(0, 4) + '-' + whatsappNumber.substring(4, 8) + '-' + whatsappNumber.substring(8);
+                actionArea.innerHTML = `
+                    <a href="https://wa.me/${whatsappNumber}?text=${encodedMsg}" 
+                       class="whatsapp-btn" target="_blank">
+                        <i class="fab fa-whatsapp"></i> Kirim ke ${escapeHtml(order.restaurant)}
+                    </a>
+                    <p>Nomor WhatsApp: ${formattedNum}</p>
+                `;
+            } else {
+                actionArea.innerHTML = '<p>Silakan hubungi admin untuk konfirmasi pembayaran.</p>';
+            }
+        });
     </script>
 </body>
 </html>

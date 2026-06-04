@@ -1,67 +1,66 @@
 # Kantin UDS (Pujasera UDS)
 
-Aplikasi web e-commerce sederhana berbasis PHP untuk memesan makanan dan minuman dari berbagai warung di Kantin/Pujasera Universitas Darul 'Ulum Surakarta (UDS). Aplikasi ini mendukung registrasi pengguna, pemilihan menu dari berbagai kedai/warung, keranjang belanja, hingga proses checkout pembayaran menggunakan QRIS.
+Aplikasi web e-commerce sederhana berbasis **HTML, CSS, dan JavaScript** untuk memesan makanan dan minuman dari berbagai warung di Kantin/Pujasera Universitas Darul 'Ulum Surakarta (UDS). 
+
+Proyek ini telah dikonversi dari versi PHP menjadi **aplikasi web statis murni** agar dapat dideploy langsung pada **GitHub Pages** (tanpa memerlukan server backend PHP/MySQL). Semua fungsionalitas login, registrasi, pengelolaan keranjang belanja, hingga simulasi pemesanan dan checkout QRIS kini berjalan sepenuhnya di sisi klien menggunakan browser **localStorage**.
+
+## Link Live Demo (GitHub Pages)
+
+Akses aplikasi web ini secara langsung di:
+👉 **[arok1013.github.io/kantin-uds](https://arok1013.github.io/kantin-uds/)**
 
 ## Fitur Utama
 
-- **Autentikasi Pengguna**: Fitur Login dan Register untuk pengguna baru agar dapat melakukan transaksi.
-- **Daftar Warung & Menu**: Menjelajahi menu dari berbagai warung yang tersedia:
-  - **Warung Jawa**: Spesialis masakan Jawa otentik.
-  - **Kedai Mama Zavan**: Menu khas Sunda modern.
-  - **Warung Bu Endang**: Penyetan dan aneka jus segar.
-- **Keranjang Belanja**: Menambah, mengurangi, dan menghapus pesanan secara interaktif sebelum pembayaran.
-- **Metode Pembayaran QRIS**: Proses checkout dengan simulasi pembayaran digital QRIS (Saweria).
-- **Desain Responsif**: Antarmuka modern dan responsif menggunakan CSS murni (Vanilla CSS) yang nyaman diakses lewat perangkat mobile maupun desktop.
+- **Autentikasi Pengguna (Client-Side)**: Fitur Login dan Register yang terhubung ke penyimpanan lokal (`localStorage`). Dilengkapi dengan validasi input (kecocokan password, panjang minimal 6 karakter, dll.) serta akun admin bawaan (`username: admin`, `password: admin123`).
+- **Daftar Warung & Menu**: Menjelajahi menu dengan harga dan gambar dari berbagai warung:
+  - **Warung Jawa**: Rujak Cingur, Lalapan Ayam Goreng, Penyetan Komplit.
+  - **Kedai Mama Zavan**: Seblak, Baso Aci, Kentang Krispy, Tahu Crispy, Enoki Crispy, Tempura Bumbu Tabur/Spicy.
+  - **Warung Bu Endang**: Gado-gado, Soto Ayam.
+- **Keranjang Belanja Interaktif**: Memungkinkan penambahan menu secara real-time, perbaruan kuantitas (1-10 porsi), penghapusan item individual, pengosongan keranjang, serta validasi agar seluruh item dalam keranjang berasal dari warung yang sama (Single-Restaurant Checkout).
+- **Proses Checkout & QRIS Dinamis**: Halaman checkout dengan input nama pemesan, nomor meja, ringkasan belanja, dan visual QRIS dinamis yang berganti otomatis menyesuaikan warung (Saweria 1 untuk Warung Jawa, Saweria 2 untuk Kedai Mama Zavan dan Warung Bu Endang).
+- **Struk Pesanan & Konfirmasi WhatsApp**: Membuat ID pesanan unik (`ORD-...`) dan ringkasan pembayaran secara instan, serta menyediakan tombol kirim konfirmasi pemesanan otomatis beserta template teks detail pesanan langsung ke nomor WhatsApp pengelola warung yang bersangkutan.
+- **Desain Responsif & Estetis**: Antarmuka modern dan responsif menggunakan Vanilla CSS dengan performa cepat, micro-animation pada tombol, transisi halus, serta kompatibilitas penuh dari layar mobile hingga desktop.
 
 ## Struktur Project
 
 ```text
 kantin-uds/
-├── img/                  # Folder aset gambar menu dan warung
-├── cart.php              # Halaman detail keranjang belanja
-├── cart_handler.php      # Handler backend untuk penambahan/pengurangan item keranjang
-├── checkout.php          # Halaman proses checkout dan metode pembayaran QRIS
-├── empty_cart.php        # Halaman jika keranjang kosong
-├── index.php             # Halaman utama (landing page)
-├── kedai-mama-zavan.php  # Menu Kedai Mama Zavan
-├── login.php             # Halaman login pengguna
-├── logout.php            # Halaman proses logout
-├── order_success.php     # Halaman setelah pesanan berhasil diselesaikan
-├── register.php          # Halaman pendaftaran akun baru
-├── style.css             # Styling utama aplikasi (Vanilla CSS)
-├── warung-bu-endang.php  # Menu Warung Bu Endang
-└── warung-jawa.php       # Menu Warung Jawa
+├── img/                       # Folder aset gambar menu dan warung (QRIS Saweria)
+├── cart.html                  # Halaman detail keranjang belanja
+├── checkout.html              # Halaman proses checkout dan metode pembayaran QRIS
+├── index.html                 # Halaman utama (landing page / pujasera)
+├── kedai-mama-zavan.html      # Menu makanan Kedai Mama Zavan
+├── login.html                 # Halaman masuk pengguna
+├── order_success.html         # Halaman struk pesanan & konfirmasi WhatsApp
+├── register.html              # Halaman pendaftaran akun baru
+├── style.css                  # Styling utama aplikasi (Vanilla CSS)
+├── warung-bu-endang.html      # Menu makanan Warung Bu Endang
+└── warung-jawa.html           # Menu makanan Warung Jawa
 ```
 
 ## Teknologi yang Digunakan
 
 - **Frontend**: HTML5, Vanilla CSS, Font Awesome 6.4.0 (Icons)
-- **Backend**: PHP (Native Session)
-- **Database**: PHP Session-based storage (untuk keranjang) & custom login handling
+- **Logika & Data**: JavaScript (ES6+), Web Storage API (`localStorage`)
 
 ## Cara Menjalankan Project Secara Lokal
 
-1. **Prasyarat**:
-   Pastikan Anda sudah mengunduh dan menginstal server lokal seperti **XAMPP**, **Laragon**, atau menggunakan built-in PHP server.
+### Cara Cepat (Direct Open)
+Karena aplikasi ini adalah web statis murni, Anda cukup:
+1. Unduh atau klon repositori ini ke komputer Anda.
+2. Klik ganda (double click) file `index.html` untuk langsung membukanya di browser Google Chrome, Firefox, Safari, atau Edge.
 
-2. **Kloning Repositori**:
-   ```bash
-   git clone https://github.com/arok1013/kantin-uds.git
-   ```
-
-3. **Pindahkan File**:
-   Pindahkan folder proyek ini ke direktori root server lokal Anda (misal `htdocs` untuk XAMPP atau `www` untuk Laragon).
-
-4. **Jalankan Aplikasi**:
-   Buka browser Anda dan akses:
-   ```text
-   http://localhost/kantin-uds
-   ```
-   Atau jalankan server internal PHP dari terminal di dalam direktori proyek:
-   ```bash
-   php -S localhost:8000
-   ```
-   Lalu buka [http://localhost:8000](http://localhost:8000) di browser Anda.
+### Menggunakan Web Server Lokal (Direkomendasikan)
+Jika ingin menjalankan menggunakan web server lokal ringan (seperti Python atau Node.js):
+- **Python 3**:
+  ```bash
+  python -m http.server 8000
+  ```
+- **Node.js (serve)**:
+  ```bash
+  npx serve
+  ```
+Lalu buka [http://localhost:8000](http://localhost:8000) atau port yang disediakan di browser Anda.
 
 ## Kontributor
 

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keranjang Belanja - Food Court</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .cart-container {
+            margin: 30px auto; max-width: 900px; background: white;
+            border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); padding: 20px;
+        }
+        .cart-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;
+        }
+        .cart-restaurant {
+            background-color: #f5f5f5; padding: 10px 15px; border-radius: 8px;
+            margin-bottom: 20px; font-weight: 500; color: #4E54C8; display: flex; align-items: center;
+        }
+        .cart-restaurant i { margin-right: 10px; }
+        .cart-items { margin-bottom: 30px; }
+        .cart-item {
+            display: flex; padding: 15px 0; border-bottom: 1px solid #f1f1f1; position: relative;
+        }
+        .cart-item-image {
+            width: 80px; height: 80px; border-radius: 8px; overflow: hidden; margin-right: 15px;
+        }
+        .cart-item-image img { width: 100%; height: 100%; object-fit: cover; }
+        .cart-item-info { flex: 1; }
+        .cart-item-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .cart-item-title { font-weight: 600; font-size: 1.1rem; margin: 0; }
+        .cart-item-price { font-weight: 600; color: #4E54C8; }
+        .cart-item-quantity {
+            width: 60px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; text-align: center;
+        }
+        .cart-item-actions {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+        }
+        .cart-item-remove {
+            color: #ff5252; font-size: 0.9rem; cursor: pointer; text-decoration: none; background: none; border: none;
+        }
+        .cart-item-remove:hover { text-decoration: underline; }
+        .cart-summary { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        .cart-summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .cart-summary-total {
+            font-weight: 700; font-size: 1.2rem; margin-top: 10px;
+            padding-top: 10px; border-top: 2px solid #eee;
+        }
+        .cart-buttons { display: flex; justify-content: space-between; margin-top: 20px; }
+        .cart-update-btn, .cart-checkout-btn {
+            padding: 12px 24px; border-radius: 30px; border: none;
+            cursor: pointer; font-weight: 500; transition: all 0.3s ease; text-decoration: none; text-align: center;
+        }
+        .cart-update-btn { background-color: #f1f1f1; color: #333; }
+        .cart-checkout-btn { background-color: #4E54C8; color: white; }
+        .empty-cart { text-align: center; padding: 50px 0; }
+        .empty-cart-icon { font-size: 4rem; color: #ccc; margin-bottom: 20px; }
+        .continue-shopping {
+            margin-top: 20px; display: inline-block; padding: 10px 20px; border-radius: 30px;
+            background-color: #4E54C8; color: white; text-decoration: none; font-weight: 500; transition: all 0.3s ease;
+        }
+
+        @media screen and (max-width: 767px) {
+            .cart-container { margin: 15px auto; padding: 15px; max-width: 95%; }
+            .cart-header { flex-direction: column; align-items: flex-start; }
+            .cart-header h1 { margin-bottom: 10px; font-size: 1.5rem; }
+            .cart-item { flex-direction: column; }
+            .cart-item-image { width: 100%; height: 150px; margin-right: 0; margin-bottom: 10px; }
+            .cart-item-header { flex-direction: column; }
+            .cart-item-price { margin-top: 5px; }
+            .cart-item-actions { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .cart-buttons { flex-direction: column; gap: 10px; }
+            .cart-update-btn, .cart-checkout-btn { width: 100%; text-align: center; }
+            .navbar-menu { gap: 10px; }
+            .back-btn { margin-left: 10px; }
+        }
+
+        @media screen and (min-width: 768px) and (max-width: 1023px) {
+            .cart-container { max-width: 90%; padding: 15px; }
+            .cart-buttons { flex-wrap: wrap; gap: 10px; }
+            .cart-update-btn, .cart-checkout-btn { flex: 1; min-width: 200px; text-align: center; }
+        }
+
+        @media screen and (min-width: 1024px) {
+            .cart-container { max-width: 900px; padding: 25px; }
+            .cart-item-image { width: 100px; height: 100px; }
+            .cart-item-title { font-size: 1.2rem; }
+            .cart-buttons { justify-content: flex-end; gap: 15px; }
+            .cart-update-btn, .cart-checkout-btn { min-width: 180px; }
+        }
+
+        @media screen and (min-width: 1440px) {
+            .cart-container { max-width: 1100px; }
+            .container { max-width: 1200px; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-logo">UDS FoodCourt</div>
+        <div class="navbar-menu" id="navbar-menu"></div>
+    </nav>
+    
+    <div class="container">
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+        
+        <div class="cart-container">
+            <div class="cart-header">
+                <h1>Keranjang Belanja</h1>
+                <span id="cart-item-count">0 items</span>
+            </div>
+            
+            <div id="cart-content">
+                <!-- Dynamically rendered by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 UDS FoodCourt by Derik Maulana. Hak Cipta Dilindungi.</p>
+    </footer>
+
+    <script>
+        function escapeHtml(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
+        function getCart(){return JSON.parse(localStorage.getItem('cart')||'[]');}
+        function saveCart(c){localStorage.setItem('cart',JSON.stringify(c));}
+        function getCartCount(){return getCart().reduce((s,i)=>s+parseInt(i.quantity),0);}
+        function formatRupiah(n){return 'Rp '+n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,".");}
+
+        function renderNavbar() {
+            const loggedIn = localStorage.getItem('loggedin')==='true';
+            const username = localStorage.getItem('username')||'';
+            const cartCount = getCartCount();
+            const nav = document.getElementById('navbar-menu');
+            if(loggedIn){
+                nav.innerHTML=`<span class="user-greeting">Halo, ${escapeHtml(username)}</span><a href="#" id="logout-btn">Logout</a><a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">${cartCount}</span></a>`;
+                document.getElementById('logout-btn').addEventListener('click',function(e){e.preventDefault();localStorage.removeItem('loggedin');localStorage.removeItem('username');window.location.href='index.html';});
+            } else {
+                nav.innerHTML=`<a href="login.html">Login</a><a href="register.html">Register</a><a href="login.html" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">${cartCount}</span></a>`;
+            }
+        }
+
+        function renderCart() {
+            const loggedIn = localStorage.getItem('loggedin')==='true';
+            if(!loggedIn){ window.location.href='login.html'; return; }
+
+            const cart = getCart();
+            const cartContent = document.getElementById('cart-content');
+            const cartItemCount = document.getElementById('cart-item-count');
+            const totalItems = getCartCount();
+            cartItemCount.textContent = totalItems + ' items';
+
+            if(cart.length === 0) {
+                cartContent.innerHTML = `
+                    <div class="empty-cart">
+                        <div class="empty-cart-icon"><i class="fas fa-shopping-cart"></i></div>
+                        <h2>Keranjang Anda Kosong</h2>
+                        <p>Tambahkan beberapa item menu dari warung favorit kami.</p>
+                        <a href="index.html" class="continue-shopping">Mulai Belanja</a>
+                    </div>
+                `;
+                return;
+            }
+
+            const restaurantName = cart[0].restaurant;
+            let totalPrice = 0;
+            cart.forEach(item => { totalPrice += item.price * item.quantity; });
+
+            let itemsHtml = '';
+            cart.forEach((item, index) => {
+                itemsHtml += `
+                    <div class="cart-item">
+                        <div class="cart-item-image">
+                            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}">
+                        </div>
+                        <div class="cart-item-info">
+                            <div class="cart-item-header">
+                                <h3 class="cart-item-title">${escapeHtml(item.name)}</h3>
+                                <div class="cart-item-price">${formatRupiah(item.price * item.quantity)}</div>
+                            </div>
+                            <div class="cart-item-actions">
+                                <div>
+                                    <input type="number" class="cart-item-quantity" data-index="${index}" value="${item.quantity}" min="1" max="10">
+                                </div>
+                                <button class="cart-item-remove" data-index="${index}">
+                                    <i class="fas fa-trash"></i> Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            cartContent.innerHTML = `
+                <div class="cart-restaurant">
+                    <i class="fas fa-store"></i>
+                    Pesanan dari: ${escapeHtml(restaurantName)}
+                </div>
+                <div class="cart-items">${itemsHtml}</div>
+                <div class="cart-summary">
+                    <div class="cart-summary-total cart-summary-row">
+                        <span>Total</span>
+                        <span>${formatRupiah(totalPrice)}</span>
+                    </div>
+                </div>
+                <div class="cart-buttons">
+                    <button class="cart-update-btn" id="empty-cart-btn">Kosongkan Keranjang</button>
+                    <button class="cart-update-btn" id="update-cart-btn">Perbarui Keranjang</button>
+                    <button class="cart-checkout-btn" id="checkout-btn">Lanjut ke Pembayaran</button>
+                </div>
+            `;
+
+            // Remove item handlers
+            document.querySelectorAll('.cart-item-remove').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    let cart = getCart();
+                    cart.splice(index, 1);
+                    if(cart.length === 0) {
+                        localStorage.removeItem('current_restaurant');
+                    }
+                    saveCart(cart);
+                    renderCart();
+                    renderNavbar();
+                });
+            });
+
+            // Empty cart handler
+            document.getElementById('empty-cart-btn').addEventListener('click', function() {
+                localStorage.removeItem('cart');
+                localStorage.removeItem('current_restaurant');
+                renderCart();
+                renderNavbar();
+            });
+
+            // Update cart handler
+            document.getElementById('update-cart-btn').addEventListener('click', function() {
+                let cart = getCart();
+                document.querySelectorAll('.cart-item-quantity').forEach(input => {
+                    const index = parseInt(input.getAttribute('data-index'));
+                    const newQty = parseInt(input.value);
+                    if(newQty > 0) {
+                        cart[index].quantity = newQty;
+                    }
+                });
+                // Remove items with qty 0
+                cart = cart.filter(item => item.quantity > 0);
+                if(cart.length === 0) localStorage.removeItem('current_restaurant');
+                saveCart(cart);
+                renderCart();
+                renderNavbar();
+            });
+
+            // Checkout handler
+            document.getElementById('checkout-btn').addEventListener('click', function() {
+                window.location.href = 'checkout.html';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderNavbar();
+            renderCart();
+        });
+    </script>
+</body>
+</html>

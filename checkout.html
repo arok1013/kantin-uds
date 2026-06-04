@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Food Court</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .checkout-container {
+            margin: 30px auto;
+            max-width: 900px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .checkout-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .checkout-restaurant {
+            background-color: #f5f5f5;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            color: #4E54C8;
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkout-restaurant i {
+            margin-right: 10px;
+        }
+        
+        .checkout-steps {
+            display: flex;
+            margin-bottom: 30px;
+        }
+        
+        .checkout-step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+        
+        .checkout-step.active {
+            color: #4E54C8;
+            font-weight: 500;
+        }
+        
+        .checkout-step.completed {
+            color: #4CAF50;
+        }
+        
+        .checkout-step:not(:last-child):after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 100%;
+            height: 2px;
+            background: #eee;
+            z-index: 1;
+        }
+        
+        .checkout-step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 50%;
+            background: #eee;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .checkout-step.active .checkout-step-number {
+            background: #4E54C8;
+            color: white;
+        }
+        
+        .checkout-step.completed .checkout-step-number {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .checkout-content {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .checkout-summary {
+            flex: 1;
+        }
+        
+        .checkout-payment {
+            flex: 1;
+        }
+        
+        .checkout-items {
+            margin-bottom: 20px;
+        }
+        
+        .checkout-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+        
+        .checkout-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .payment-methods {
+            margin-bottom: 20px;
+        }
+        
+        .payment-method {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-method.selected {
+            border-color: #4E54C8;
+            background-color: #f5f7ff;
+        }
+        
+        .payment-method input {
+            margin-right: 10px;
+        }
+        
+        .payment-method-details {
+            display: flex;
+            align-items: center;
+        }
+        
+        .payment-method-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+            color: #4E54C8;
+        }
+        
+        .qris-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+        }
+        
+        .qris-code {
+            width: auto;
+            height: auto;
+            margin: 0 auto 15px;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            font-size: 0.9rem;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .qris-code img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .qris-instruction {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .checkout-btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            border: none;
+            background-color: #4E54C8;
+            color: white;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .checkout-btn:hover {
+            background-color: #3a41b5;
+        }
+        
+        .customer-info {
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        
+        .error-message {
+            color: #ff5252;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .restaurant-info {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* Responsive Breakpoints from checkout.php */
+        @media only screen and (max-width: 767px) {
+            .qris-code {
+                padding: 8px;
+            }
+            
+            .qris-code img {
+                max-width: 150px;
+                max-height: 150px;
+            }
+            
+            .qris-instruction {
+                font-size: 0.8rem;
+            }
+
+            .checkout-container {
+                margin: 15px auto;
+                padding: 15px;
+                max-width: 100%;
+            }
+            
+            .checkout-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .checkout-steps {
+                display: flex;
+                margin-bottom: 20px;
+            }
+            
+            .checkout-step {
+                padding: 5px;
+                font-size: 0.85rem;
+            }
+            
+            .checkout-step-number {
+                width: 25px;
+                height: 25px;
+                line-height: 25px;
+                font-size: 0.85rem;
+            }
+            
+            .checkout-restaurant {
+                font-size: 0.9rem;
+                padding: 8px 10px;
+            }
+            
+            .checkout-btn {
+                padding: 12px;
+            }
+            
+            .checkout-total {
+                font-size: 1.1rem;
+            }
+            
+            .navbar {
+                padding: 10px 15px;
+            }
+            
+            .navbar-menu {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            
+            .user-greeting {
+                font-size: 0.85rem;
+                margin-bottom: 5px;
+            }
+        }
+        
+        @media only screen and (min-width: 768px) and (max-width: 1023px) {
+            .qris-code img {
+                max-width: 180px;
+                max-height: 180px;
+            }
+            
+            .qris-instruction {
+                font-size: 0.85rem;
+            }
+
+            .checkout-container {
+                max-width: 90%;
+                padding: 20px;
+            }
+            
+            .checkout-content {
+                gap: 20px;
+            }
+        }
+        
+        @media only screen and (min-width: 1024px) {
+            .qris-code img {
+                max-width: 200px;
+                max-height: 200px;
+            }
+
+            .checkout-container {
+                max-width: 900px;
+                padding: 25px;
+            }
+            
+            .checkout-content {
+                gap: 40px;
+            }
+            
+            .checkout-container:hover {
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+                transition: box-shadow 0.3s ease;
+            }
+            
+            .payment-method:hover {
+                border-color: #4E54C8;
+                background-color: #f5f7ff;
+                transition: all 0.2s ease;
+            }
+            
+            .checkout-btn:hover {
+                background-color: #3a41b5;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(78, 84, 200, 0.2);
+                transition: all 0.3s ease;
+            }
+        }
+        
+        @media only screen and (min-width: 1440px) {
+            .qris-code img {
+                max-width: 220px;
+                max-height: 220px;
+            }
+
+            .checkout-container {
+                max-width: 1100px;
+            }
+            
+            .checkout-content {
+                gap: 60px;
+            }
+        }
+        
+        @media print {
+            .navbar, .back-btn, .checkout-btn, footer {
+                display: none;
+            }
+            
+            .checkout-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .checkout-payment {
+                display: none;
+            }
+            
+            .checkout-summary {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-logo">UDS FoodCourt</div>
+        <div class="navbar-menu" id="navbar-menu">
+            <!-- Dynamic navbar content -->
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <a href="cart.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+        
+        <div class="checkout-container">
+            <div class="checkout-header">
+                <h1>Checkout</h1>
+            </div>
+            
+            <div class="checkout-restaurant" id="checkout-restaurant-info">
+                <i class="fas fa-store"></i>
+                Pesanan dari: <span id="restaurant-name-text">-</span>
+            </div>
+            
+            <div class="checkout-steps">
+                <div class="checkout-step completed">
+                    <div class="checkout-step-number"><i class="fas fa-check"></i></div>
+                    <div>Keranjang</div>
+                </div>
+                <div class="checkout-step active">
+                    <div class="checkout-step-number">2</div>
+                    <div>Pembayaran</div>
+                </div>
+                <div class="checkout-step">
+                    <div class="checkout-step-number">3</div>
+                    <div>Selesai</div>
+                </div>
+            </div>
+            
+            <form id="checkout-form">
+                <div class="checkout-content">
+                    <div class="checkout-summary">
+                        <h2>Informasi Pelanggan</h2>
+                        
+                        <div class="customer-info">
+                            <div class="error-message" id="checkout-error"></div>
+                            
+                            <div class="form-group">
+                                <label for="name">Nama Pemesan</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="table_number">Nomor Meja</label>
+                                <input type="text" id="table_number" name="table_number" required 
+                                       placeholder="Contoh: Meja 10">
+                            </div>
+                        </div>
+                        
+                        <h3>Pesanan Anda</h3>
+                        <div class="checkout-items" id="checkout-items-list">
+                            <!-- Dynamic items list -->
+                        </div>
+                        
+                        <div class="checkout-total">
+                            <span>Total</span>
+                            <span id="checkout-total-price">Rp 0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="checkout-payment">
+                        <h2>Metode Pembayaran</h2>
+                        
+                        <div class="payment-methods">
+                            <div class="payment-method selected" onclick="selectPaymentMethod('qris')">
+                                <input type="radio" name="payment_method" value="qris" id="qris" checked>
+                                <div class="payment-method-details">
+                                    <div class="payment-method-icon">
+                                        <i class="fas fa-qrcode"></i>
+                                    </div>
+                                    <div>
+                                        <h4>QRIS</h4>
+                                        <p>Bayar dengan QRIS melalui aplikasi e-wallet atau mobile banking</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="qris-container">
+                            <div class="qris-code" id="qris-image-container">
+                                <!-- Dynamic QRIS image -->
+                            </div>
+                            <p class="qris-instruction">
+                                Scan QR code di atas menggunakan aplikasi e-wallet atau mobile banking Anda untuk menyelesaikan pembayaran.
+                            </p>
+                            <p class="restaurant-info" id="restaurant-payment-info">Pembayaran untuk: -</p>
+                        </div>
+                        
+                        <button type="submit" class="checkout-btn">
+                            Konfirmasi Pembayaran
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 UDS FoodCourt by Derik Maulana. Hak Cipta Dilindungi.</p>
+    </footer>
+    
+    <script>
+        function escapeHtml(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
+        function getCart(){return JSON.parse(localStorage.getItem('cart')||'[]');}
+        function getCartCount(){return getCart().reduce((s,i)=>s+parseInt(i.quantity),0);}
+        function formatRupiah(n){return 'Rp '+n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,".");}
+
+        function renderNavbar() {
+            const loggedIn = localStorage.getItem('loggedin')==='true';
+            const username = localStorage.getItem('username')||'';
+            const cartCount = getCartCount();
+            const nav = document.getElementById('navbar-menu');
+            if(loggedIn){
+                nav.innerHTML=`<span class="user-greeting">Halo, ${escapeHtml(username)}</span><a href="#" id="logout-btn">Logout</a><a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">${cartCount}</span></a>`;
+                document.getElementById('logout-btn').addEventListener('click',function(e){
+                    e.preventDefault();
+                    localStorage.removeItem('loggedin');
+                    localStorage.removeItem('username');
+                    window.location.href='index.html';
+                });
+            } else {
+                nav.innerHTML=`<a href="login.html">Login</a><a href="register.html">Register</a><a href="login.html" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">${cartCount}</span></a>`;
+            }
+        }
+
+        function selectPaymentMethod(method) {
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            document.getElementById(method).checked = true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check login status
+            const loggedIn = localStorage.getItem('loggedin')==='true';
+            if(!loggedIn) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            renderNavbar();
+
+            const cart = getCart();
+            if(cart.length === 0) {
+                window.location.href = 'cart.html';
+                return;
+            }
+
+            // Determine restaurant name from cart
+            const restaurantName = cart[0].restaurant;
+            
+            // Validate all items are from the same restaurant (should be already enforced in cart, but double check)
+            const sameRestaurant = cart.every(item => item.restaurant === restaurantName);
+            if(!sameRestaurant) {
+                localStorage.removeItem('cart');
+                localStorage.removeItem('current_restaurant');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Fill restaurant texts
+            document.getElementById('restaurant-name-text').textContent = restaurantName;
+            document.getElementById('restaurant-payment-info').textContent = 'Pembayaran untuk: ' + restaurantName;
+
+            // QRIS Image dynamically set
+            const qrisContainer = document.getElementById('qris-image-container');
+            if (restaurantName === "Warung Jawa") {
+                qrisContainer.innerHTML = '<img src="img/saweria1.png" alt="QRIS Warung Jawa">';
+            } else if (restaurantName === "Kedai Mama Zavan" || restaurantName === "Warung Bu Endang") {
+                qrisContainer.innerHTML = '<img src="img/saweria2.png" alt="QRIS ' + escapeHtml(restaurantName) + '">';
+            } else {
+                qrisContainer.innerHTML = '<img src="img/saweria2.png" alt="QRIS">';
+            }
+
+            // Set default name to username
+            document.getElementById('name').value = localStorage.getItem('username') || '';
+
+            // Render order items & total price
+            let totalPrice = 0;
+            const itemsList = document.getElementById('checkout-items-list');
+            let itemsHtml = '';
+            
+            cart.forEach(item => {
+                const subtotal = item.price * item.quantity;
+                totalPrice += subtotal;
+                itemsHtml += `
+                    <div class="checkout-item">
+                        <span>${escapeHtml(item.name)} × ${item.quantity}</span>
+                        <span>${formatRupiah(subtotal)}</span>
+                    </div>
+                `;
+            });
+            itemsList.innerHTML = itemsHtml;
+            document.getElementById('checkout-total-price').textContent = formatRupiah(totalPrice);
+
+            // Handle Checkout Submit
+            const form = document.getElementById('checkout-form');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const customerName = document.getElementById('name').value.trim();
+                const tableNumber = document.getElementById('table_number').value.trim();
+                const errorDiv = document.getElementById('checkout-error');
+
+                if(!customerName) {
+                    errorDiv.textContent = 'Nama harus diisi';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+                if(!tableNumber) {
+                    errorDiv.textContent = 'Nomor meja harus diisi';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                // Generate Order ID
+                const orderId = 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+                // Prepare order items
+                const orderItems = cart.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    image: item.image
+                }));
+
+                // Get date in WIB style
+                const now = new Date();
+                const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const formattedDate = `${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+                const orderData = {
+                    id: orderId,
+                    date: formattedDate,
+                    table: tableNumber,
+                    restaurant: restaurantName,
+                    items: orderItems,
+                    total: totalPrice,
+                    customer_name: customerName
+                };
+
+                // Store current order and clear cart
+                localStorage.setItem('current_order', JSON.stringify(orderData));
+                localStorage.removeItem('cart');
+                localStorage.removeItem('current_restaurant');
+
+                // Redirect to success page
+                window.location.href = 'order_success.html';
+            });
+        });
+    </script>
+</body>
+</html>

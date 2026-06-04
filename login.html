@@ -1,103 +1,3 @@
-<?php
-session_start();
-
-// Check if user is already logged in
-if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
-    header("Location: index.php");
-    exit();
-}
-
-// Database connection parameters
-$servername = "localhost";
-$db_username = "fianwir1_adminpujasera";
-$db_password = "Fianarema1307";
-$dbname = "fianwir1_derikpujaserauds";
-
-// Initialize variables
-$username = $password = "";
-$username_err = $password_err = $login_err = "";
-
-// Process form data when form is submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    
-    // Validate username
-    if (empty(trim($_POST["username"]))) {
-        $username_err = "Silakan masukkan username.";
-    } else {
-        $username = trim($_POST["username"]);
-    }
-    
-    // Validate password
-    if (empty(trim($_POST["password"]))) {
-        $password_err = "Silakan masukkan password.";
-    } else {
-        $password = trim($_POST["password"]);
-    }
-    
-    // Validate credentials
-    if (empty($username_err) && empty($password_err)) {
-        // Create database connection
-        $conn = new mysqli($servername, $db_username, $db_password, $dbname);
-        
-        // Check connection
-        if ($conn->connect_error) {
-            $login_err = "Koneksi database gagal: " . $conn->connect_error;
-        } else {
-            // Prepare a select statement
-            $sql = "SELECT id, username, password FROM users WHERE username = ?";
-            
-            if ($stmt = $conn->prepare($sql)) {
-                // Bind variables to the prepared statement as parameters
-                $stmt->bind_param("s", $param_username);
-                
-                // Set parameters
-                $param_username = $username;
-                
-                // Attempt to execute the prepared statement
-                if ($stmt->execute()) {
-                    // Store result
-                    $stmt->store_result();
-                    
-                    // Check if username exists, if yes then verify password
-                    if ($stmt->num_rows == 1) {                    
-                        // Bind result variables
-                        $stmt->bind_result($id, $username, $hashed_password);
-                        if ($stmt->fetch()) {
-                            if (password_verify($password, $hashed_password)) {
-                                // Password is correct, so start a new session
-                                
-                                // Store data in session variables
-                                $_SESSION["loggedin"] = true;
-                                $_SESSION["user_id"] = $id;
-                                $_SESSION["username"] = $username;                            
-                                
-                                // Redirect user to index page
-                                header("Location: index.php");
-                                exit();
-                            } else {
-                                // Password is not valid, display a generic error message
-                                $login_err = "Username atau password tidak valid.";
-                            }
-                        }
-                    } else {
-                        // Username doesn't exist, display a generic error message
-                        $login_err = "Username atau password tidak valid.";
-                    }
-                } else {
-                    $login_err = "Oops! Something went wrong. Please try again later.";
-                }
-
-                // Close statement
-                $stmt->close();
-            }
-            
-            // Close connection
-            $conn->close();
-        }
-    }
-}
-?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -106,7 +6,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Login - Pujasera UDS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Common styles for Pujasera UDS Food Court */
         * {
             margin: 0;
             padding: 0;
@@ -118,7 +17,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             background-color: #f7f9fc;
         }
 
-        /* Navbar styles */
         .navbar {
             display: flex;
             justify-content: space-between;
@@ -152,14 +50,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: #FFD166;
         }
 
-        /* Container styles */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 40px 20px;
         }
 
-        /* Login form styles */
         .container.form-container {
             max-width: 450px;
             margin: 80px auto;
@@ -220,6 +116,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: #e74c3c;
             font-size: 14px;
             margin-top: 5px;
+            display: none;
+        }
+
+        .is-invalid {
+            border-color: #e74c3c;
         }
 
         .btn {
@@ -290,6 +191,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin-bottom: 20px;
             border-radius: 8px;
             font-weight: 500;
+            display: none;
         }
 
         .alert-danger {
@@ -298,7 +200,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             border: 1px solid #f5c6cb;
         }
 
-        /* Footer styles */
         footer {
             background-color: #2D3047;
             color: white;
@@ -308,7 +209,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             width: 100%;
         }
 
-        /* Responsive styles */
         @media (max-width: 768px) {
             .navbar {
                 padding: 15px 20px;
@@ -324,50 +224,114 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </style>
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-logo">Pujasera UDS</div>
         <div class="navbar-menu">
-            <a href="index.php">Beranda</a>
-            <a href="register.php">Register</a>
+            <a href="index.html">Beranda</a>
+            <a href="register.html">Register</a>
         </div>
     </nav>
     
-    <!-- Main Content -->
     <div class="container form-container">
         <h2 class="form-title">Login</h2>
         
-        <?php 
-        if(!empty($login_err)){
-            echo '<div class="alert alert-danger">' . $login_err . '</div>';
-        }        
-        ?>
+        <div class="alert alert-danger" id="login-alert"></div>
 
-        <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+        <form id="login-form">
             <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" class="form-control <?php echo (!empty($username_err)) ? 'is-invalid' : ''; ?>" value="<?php echo $username; ?>">
-                <span class="invalid-feedback"><?php echo $username_err; ?></span>
+                <input type="text" id="username" class="form-control" placeholder="Masukkan username">
+                <span class="invalid-feedback" id="username-err">Silakan masukkan username.</span>
             </div>    
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" class="form-control <?php echo (!empty($password_err)) ? 'is-invalid' : ''; ?>">
-                <span class="invalid-feedback"><?php echo $password_err; ?></span>
+                <input type="password" id="password" class="form-control" placeholder="Masukkan password">
+                <span class="invalid-feedback" id="password-err">Silakan masukkan password.</span>
             </div>
             <div class="form-group">
-                <input type="submit" class="btn" value="Login">
+                <button type="submit" class="btn">Login</button>
             </div>
-            <p class="register-link">Belum punya akun? <a href="register.php">Daftar disini</a>.</p>
+            <p class="register-link">Belum punya akun? <a href="register.html">Daftar disini</a>.</p>
         </form>
-        <!-- Tombol Kembali -->
-        <a href="index.php" class="btn-back">
+        <a href="index.html" class="btn-back">
             <i class="fas fa-arrow-left"></i> Kembali ke Beranda
         </a>
     </div>
     
-    <!-- Footer -->
     <footer>
         <p>&copy; 2025 Derik. Hak Cipta Dilindungi.</p>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already logged in
+            if (localStorage.getItem('loggedin') === 'true') {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const loginForm = document.getElementById('login-form');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const usernameErr = document.getElementById('username-err');
+            const passwordErr = document.getElementById('password-err');
+            const loginAlert = document.getElementById('login-alert');
+
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Reset states
+                usernameInput.classList.remove('is-invalid');
+                passwordInput.classList.remove('is-invalid');
+                usernameErr.style.display = 'none';
+                passwordErr.style.display = 'none';
+                loginAlert.style.display = 'none';
+
+                const usernameValue = usernameInput.value.trim();
+                const passwordValue = passwordInput.value.trim();
+                let hasError = false;
+
+                if (!usernameValue) {
+                    usernameInput.classList.add('is-invalid');
+                    usernameErr.style.display = 'block';
+                    hasError = true;
+                }
+
+                if (!passwordValue) {
+                    passwordInput.classList.add('is-invalid');
+                    passwordErr.style.display = 'block';
+                    hasError = true;
+                }
+
+                if (hasError) return;
+
+                // Load users from localStorage
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                
+                // Find matching user
+                // (Checking case-insensitive username for convenience, or case-sensitive as PHP)
+                const user = users.find(u => u.username.toLowerCase() === usernameValue.toLowerCase());
+
+                if (user && user.password === passwordValue) {
+                    // Successful login
+                    localStorage.setItem('loggedin', 'true');
+                    localStorage.setItem('username', user.username);
+                    window.location.href = 'index.html';
+                } else {
+                    // Check if it's default admin for easier testing/fallback
+                    if (usernameValue === "admin" && passwordValue === "admin123") {
+                        localStorage.setItem('loggedin', 'true');
+                        localStorage.setItem('username', 'Admin');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                    
+                    // Failed login
+                    loginAlert.textContent = "Username atau password tidak valid.";
+                    loginAlert.style.display = 'block';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

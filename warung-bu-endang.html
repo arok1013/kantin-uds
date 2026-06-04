@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Warung Bu Endang - Pujasera UDS</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; background-color: #28a745; color: white;
+            padding: 15px 25px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 9999; display: none; opacity: 0; transition: opacity 0.5s, bottom 0.5s;
+        }
+        .toast.show { display: block; opacity: 1; bottom: 40px; }
+        .toast.error { background-color: #dc3545; }
+        .toast i { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div id="toast-container"></div>
+
+    <nav class="navbar">
+        <div class="navbar-logo">Pujasera UDS</div>
+        <div class="navbar-menu" id="navbar-menu"></div>
+    </nav>
+    
+    <div class="container">
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+        
+        <div class="restaurant-header">
+            <div class="restaurant-logo">
+                <img src="img/gadogadodo.webp" alt="Warung Bu Endang">
+            </div>
+            <div class="restaurant-details">
+                <h1>Warung Bu Endang</h1>
+                <p>Menyediakan Gado-Gado dan Soto Ayam</p>
+                <div class="rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <span style="color: rgba(255, 255, 255, 0.8);">(150 ulasan)</span>
+                </div>
+            </div>
+        </div>
+        
+        <h2 class="section-title">Menu Kami</h2>
+        <div class="menu-categories">
+            <div class="menu-category active" data-category="all">Semua</div>
+            <div class="menu-category" data-category="Makanan">Makanan</div>
+        </div>
+        
+        <div class="menu-items">
+            <div class="menu-item" data-category="Makanan">
+                <div class="menu-item-image">
+                    <img src="img/gadogadodo.webp" alt="Gado-gado">
+                </div>
+                <div class="menu-item-info">
+                    <h3>Gado-gado</h3>
+                    <p>Salad sayuran segar dengan saus kacang khas, lengkap dengan lontong dan kerupuk.</p>
+                    <div class="menu-item-price">Rp 15.000</div>
+                    <form class="add-to-cart-form">
+                        <input type="hidden" name="item_id" value="1">
+                        <input type="hidden" name="item_name" value="Gado-gado">
+                        <input type="hidden" name="item_price" value="15000">
+                        <input type="hidden" name="item_image" value="img/gadogadodo.webp">
+                        <div class="add-to-cart">
+                            <div class="quantity">
+                                <button type="button" class="quantity-btn decrease">-</button>
+                                <span>1</span>
+                                <input type="hidden" name="item_quantity" value="1" class="quantity-input">
+                                <button type="button" class="quantity-btn increase">+</button>
+                            </div>
+                            <button type="submit" class="add-btn">Tambah</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="menu-item" data-category="Makanan">
+                <div class="menu-item-image">
+                    <img src="img/sotoayamm.jpeg" alt="Soto Ayam">
+                </div>
+                <div class="menu-item-info">
+                    <h3>Soto Ayam</h3>
+                    <p>Soto ayam bening dengan suwiran ayam, soun, tauge, dan telur, disajikan dengan nasi hangat.</p>
+                    <div class="menu-item-price">Rp 18.000</div>
+                    <form class="add-to-cart-form">
+                        <input type="hidden" name="item_id" value="2">
+                        <input type="hidden" name="item_name" value="Soto Ayam">
+                        <input type="hidden" name="item_price" value="18000">
+                        <input type="hidden" name="item_image" value="img/sotoayamm.jpeg">
+                        <div class="add-to-cart">
+                            <div class="quantity">
+                                <button type="button" class="quantity-btn decrease">-</button>
+                                <span>1</span>
+                                <input type="hidden" name="item_quantity" value="1" class="quantity-input">
+                                <button type="button" class="quantity-btn increase">+</button>
+                            </div>
+                            <button type="submit" class="add-btn">Tambah</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="loginModal" style="display: none;">
+        <div class="modal-content">
+            <h3>Login Diperlukan</h3>
+            <p>Anda perlu login terlebih dahulu untuk menambahkan item ke keranjang.</p>
+            <div class="modal-buttons">
+                <a href="login.html" class="btn">Login</a>
+                <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 Pujasera UDS by Derik. Hak Cipta Dilindungi.</p>
+    </footer>
+    
+    <script>
+        const RESTAURANT_NAME = "Warung Bu Endang";
+        const RESTAURANT_PREFIX = "buendang_";
+
+        function escapeHtml(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");}
+        function getCart(){return JSON.parse(localStorage.getItem('cart')||'[]');}
+        function saveCart(c){localStorage.setItem('cart',JSON.stringify(c));}
+        function getCartCount(){return getCart().reduce((s,i)=>s+parseInt(i.quantity),0);}
+
+        function showToast(message, isError=false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.innerHTML = `<i class="fas ${isError?'fa-exclamation-circle':'fa-check-circle'}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(()=>toast.classList.add('show'),100);
+            setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>container.removeChild(toast),500);},3000);
+        }
+
+        function renderNavbar() {
+            const loggedIn = localStorage.getItem('loggedin')==='true';
+            const username = localStorage.getItem('username')||'';
+            const cartCount = getCartCount();
+            const nav = document.getElementById('navbar-menu');
+            if(loggedIn){
+                nav.innerHTML=`<span class="user-greeting">Halo, ${escapeHtml(username)}</span><a href="#" id="logout-btn">Logout</a><a href="cart.html" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">${cartCount}</span></a>`;
+                document.getElementById('logout-btn').addEventListener('click',function(e){e.preventDefault();localStorage.removeItem('loggedin');localStorage.removeItem('username');window.location.href='index.html';});
+            } else {
+                nav.innerHTML=`<a href="login.html">Login</a><a href="register.html">Register</a><a href="login.html" class="cart-icon"><i class="fas fa-shopping-cart"></i><span class="cart-count">${cartCount}</span></a>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const isLoggedIn = localStorage.getItem('loggedin')==='true';
+            const modal = document.getElementById('loginModal');
+            renderNavbar();
+
+            document.querySelectorAll('.menu-category').forEach(category=>{
+                category.addEventListener('click',function(){
+                    document.querySelectorAll('.menu-category').forEach(c=>c.classList.remove('active'));
+                    this.classList.add('active');
+                    const sel=this.getAttribute('data-category');
+                    document.querySelectorAll('.menu-item').forEach(item=>{
+                        item.style.display=(sel==='all'||item.getAttribute('data-category')===sel)?'block':'none';
+                    });
+                });
+            });
+
+            document.querySelectorAll('.add-to-cart-form').forEach(form=>{
+                const decreaseBtn=form.querySelector('.decrease');
+                const increaseBtn=form.querySelector('.increase');
+                const quantitySpan=form.querySelector('.quantity span');
+                const quantityInput=form.querySelector('.quantity-input');
+
+                decreaseBtn.addEventListener('click',function(){let q=parseInt(quantityInput.value);if(q>1){q--;quantitySpan.textContent=q;quantityInput.value=q;}});
+                increaseBtn.addEventListener('click',function(){let q=parseInt(quantityInput.value);q++;quantitySpan.textContent=q;quantityInput.value=q;});
+
+                form.addEventListener('submit',function(e){
+                    e.preventDefault();
+                    if(!isLoggedIn){modal.style.display='flex';return;}
+
+                    const itemId=form.querySelector('[name="item_id"]').value;
+                    const itemName=form.querySelector('[name="item_name"]').value;
+                    const itemPrice=parseInt(form.querySelector('[name="item_price"]').value);
+                    const itemImage=form.querySelector('[name="item_image"]').value;
+                    const itemQuantity=parseInt(quantityInput.value);
+
+                    let cart=getCart();
+                    const currentRestaurant=localStorage.getItem('current_restaurant')||'';
+
+                    if(cart.length>0&&currentRestaurant&&currentRestaurant!==RESTAURANT_NAME){
+                        showToast(`Anda sudah memiliki pesanan dari ${currentRestaurant}. Selesaikan atau kosongkan keranjang untuk memesan dari warung ini.`,true);
+                        return;
+                    }
+
+                    localStorage.setItem('current_restaurant',RESTAURANT_NAME);
+                    const cartItemId=RESTAURANT_PREFIX+itemId;
+                    const idx=cart.findIndex(i=>i.id===cartItemId);
+
+                    if(idx!==-1){cart[idx].quantity+=itemQuantity;}
+                    else{cart.push({id:cartItemId,name:itemName,price:itemPrice,quantity:itemQuantity,image:itemImage,restaurant:RESTAURANT_NAME});}
+
+                    saveCart(cart);
+                    showToast(`${itemQuantity}x ${itemName} telah ditambahkan!`);
+                    quantitySpan.textContent=1;quantityInput.value=1;
+                    document.querySelector('.cart-count').textContent=getCartCount();
+                });
+            });
+
+            window.closeModal=function(){modal.style.display='none';}
+            window.onclick=function(event){if(event.target==modal)closeModal();}
+        });
+    </script>
+</body>
+</html>
