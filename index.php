@@ -101,7 +101,7 @@ if ($logged_in && isset($_SESSION['cart'])) {
             
             <div class="restaurant">
                 <div class="restaurant-image">
-                    <img src="/img/kedai_mama_zavan.jpg" alt="Kedai Mama Zavan">
+                    <img src="img/kedai_mama_zavan.jpg" alt="Kedai Mama Zavan">
                 </div>
                 <div class="restaurant-info">
                     <h3>Kedai Mama Zavan</h3>
@@ -120,7 +120,7 @@ if ($logged_in && isset($_SESSION['cart'])) {
 
             <div class="restaurant">
                 <div class="restaurant-image">
-                    <img src="/img/gadogadodo.webp" alt="Warung Bu Endang">
+                    <img src="img/gadogadodo.webp" alt="Warung Bu Endang">
                 </div>
                 <div class="restaurant-info">
                     <h3>Warung Bu Endang</h3>
